@@ -20,7 +20,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
   if (password.length < 6) {
     res.status(400);
-    throw new Error("Password must be up to 6 characters");
+    throw new Error("Password must be at least 6 characters long");
   }
 
   // Check if user email already exists
@@ -39,7 +39,7 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("Username has already been registered");
   }
 
-  // Create new user db me store
+  // Create new user in the database
   const user = await User.create({
     name,
     fullname,
@@ -47,10 +47,10 @@ const registerUser = asyncHandler(async (req, res) => {
     password,
     phonenumber,
     pincode,
-    role:"user",
+    role: "user",
   });
 
-  //   Generate Token
+  // Generate Token
   const token = generateToken(user._id);
 
   // Send HTTP-only cookie
@@ -77,6 +77,7 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("Invalid user data");
   }
 });
+
 
 // Login User
 const loginUser = asyncHandler(async (req, res) => {
