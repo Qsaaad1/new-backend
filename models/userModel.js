@@ -30,7 +30,6 @@ const userSchema = mongoose.Schema(
     phonenumber: {
       type: String,
       required: [true, "Please add a phone number"],
-      unique: true,
       trim: true,
     },
     pincode: {
