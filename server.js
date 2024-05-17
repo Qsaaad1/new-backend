@@ -278,11 +278,10 @@ passport.authenticate('google', { session: false }),
 
 
 ///////////////////////scholarship/////////////////////////////////////////
-
 const scholarshipSchema = new mongoose.Schema({
   id: String,
   name: String,
-  photo: String, // Change field type to String
+  photo: String,
   funding: String,
   eligibility: String,
   process: String,
@@ -301,7 +300,6 @@ app.get('/scholarships/:id', async (req, res) => {
     res.json(scholarship);
   } catch (err) {
     console.error('Error fetching scholarship:', err);
-  
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -310,13 +308,12 @@ app.get('/scholarships/:id', async (req, res) => {
 app.post('/scholarship', upload.single('file'), async (req, res) => {
   try {
     const file = req.file;
-    const { id,name, funding, eligibility, process, dates, requirements, additional } = req.body;
+    const { id, name, funding, eligibility, process, dates, requirements, additional } = req.body;
     
-    // Upload photo to S3
     const params = {
       Bucket: 'aspiring-abroad-bucket',
       Body: file.buffer,
-      Key: file.originalname, // Use a unique key for the file
+      Key: file.originalname,
       ContentType: file.mimetype
     };
 
@@ -326,11 +323,10 @@ app.post('/scholarship', upload.single('file'), async (req, res) => {
         return res.status(500).send('Error uploading photo');
       }
 
-      // Create a new scholarship document in the database
       const scholarshipDoc = await Scholarship.create({
         id,
         name,
-        photo: data.Location, // Save the S3 URL to the photo field
+        photo: data.Location,
         funding,
         eligibility,
         process,
@@ -347,32 +343,27 @@ app.post('/scholarship', upload.single('file'), async (req, res) => {
   }
 });
 
-// GET route to fetch all scholarships
 app.get('/scholarships', async (req, res) => {
   try {
     const scholarships = await Scholarship.find({});
     res.json(scholarships);
   } catch (err) {
     console.error('Error fetching scholarships:', err);
-    
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Route for updating a scholarship
 app.put('/scholarship/:id', upload.single('file'), async (req, res) => {
   const { id } = req.params;
   const { name, funding, eligibility, process, dates, requirements, additional } = req.body;
 
   try {
-    // Find the scholarship by ID
     let scholarship = await Scholarship.findOne({ id: id });
 
     if (!scholarship) {
       return res.status(404).json({ message: 'Scholarship not found' });
     }
 
-    // Update the scholarship fields
     scholarship.name = name;
     scholarship.funding = funding;
     scholarship.eligibility = eligibility;
@@ -383,20 +374,17 @@ app.put('/scholarship/:id', upload.single('file'), async (req, res) => {
 
     if (req.file) {
       const file = req.file;
-    // Upload photo to S3
-    const params = {
-      Bucket: 'aspiring-abroad-bucket',
-      Body: file.buffer,
-      Key: file.originalname, // Use a unique key for the file
-      ContentType: file.mimetype
-    };
+      const params = {
+        Bucket: 'aspiring-abroad-bucket',
+        Body: file.buffer,
+        Key: file.originalname,
+        ContentType: file.mimetype
+      };
 
-    const data = await s3.upload(params).promise();
-
+      const data = await s3.upload(params).promise();
       scholarship.photo = data.Location;
-  }
+    }
 
-    // Save the updated scholarship
     await scholarship.save();
 
     res.json({ message: 'Scholarship updated successfully', data: scholarship });
@@ -405,6 +393,24 @@ app.put('/scholarship/:id', upload.single('file'), async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+app.delete('/scholarships/:id', async (req, res) => {
+  try {
+    const scholarship = await Scholarship.findOne({ id: req.params.id });
+    if (!scholarship) {
+      return res.status(404).json({ message: 'Scholarship not found' });
+    }
+    
+    await Scholarship.deleteOne({ id: req.params.id });
+    res.status(200).json({ message: 'Scholarship deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting scholarship:', error);
+    res.status(500).json({ message: 'Failed to delete scholarship', error: error.message });
+  }
+});
+
+
+
 
 
 
@@ -521,6 +527,20 @@ app.get('/blog/:id', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 })
+
+// DELETE endpoint to delete a post by ID
+app.delete('/blog/delete/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedPost = await Post.findByIdAndDelete(id);
+    if (!deletedPost) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    res.status(200).json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 ////////////////////////////////////////////////////////////////
 
