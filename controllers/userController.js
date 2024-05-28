@@ -39,6 +39,14 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("Username has already been registered");
   }
 
+    // Check if phone number already exists
+    const phoneExists = await User.findOne({ phonenumber });
+
+    if (phoneExists) {
+      res.status(400);
+      throw new Error("Phone Number has already been registered");
+    }
+
   // Create new user in the database
   const user = await User.create({
     name,
