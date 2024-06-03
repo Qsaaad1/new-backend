@@ -285,7 +285,7 @@ const scholarshipSchema = new mongoose.Schema({
   funding: String,
   eligibility: String,
   process: String,
-  dates: Date,
+  dates: String,
   requirements: String,
   additional: String
 });
